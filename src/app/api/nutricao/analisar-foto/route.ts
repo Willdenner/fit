@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { generateText, Output } from "ai";
-import { GEMINI_MODEL, isAiGatewayReady, schemaFotoRefeicao } from "@/lib/gemini";
+import { GEMINI_MODEL, getGeminiClient, isGeminiReady, schemaFotoRefeicao } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!isAiGatewayReady()) {
+  if (!isGeminiReady()) {
     return NextResponse.json(
       {
         error:
-          "A análise de IA sobe pelo AI Gateway do Vercel. No deploy isso é automático; localmente rode vercel env pull.",
+          "Defina GEMINI_API_KEY nas variáveis de ambiente do Vercel (Production, Preview e Development).",
       },
       { status: 503 },
     );
@@ -22,31 +21,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Envie uma foto da refeição." }, { status: 400 });
   }
 
-  const bytes = new Uint8Array(await foto.arrayBuffer());
+  const bytes = Buffer.from(await foto.arrayBuffer());
 
   try {
-    const { output } = await generateText({
+    const result = await getGeminiClient().models.generateContent({
       model: GEMINI_MODEL,
-      output: Output.object({ schema: schemaFotoRefeicao }),
-      messages: [
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "image",
-              image: bytes,
-              mediaType: foto.type || "image/jpeg",
+              inlineData: {
+                mimeType: foto.type || "image/jpeg",
+                data: bytes.toString("base64"),
+              },
             },
             {
-              type: "text",
               text: "Estime os itens, porções e valores nutricionais desta refeição. Destaque sódio quando visível.",
             },
           ],
         },
       ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schemaFotoRefeicao,
+      },
     });
 
-    return NextResponse.json(output);
+    return NextResponse.json(JSON.parse(result.text ?? "{}"));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao analisar a foto.";
     return NextResponse.json({ error: message }, { status: 502 });

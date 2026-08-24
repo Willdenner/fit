@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { generateText, Output } from "ai";
-import { GEMINI_MODEL, isAiGatewayReady, schemaVeredito } from "@/lib/gemini";
+import { GEMINI_MODEL, getGeminiClient, isGeminiReady, schemaVeredito } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (!isAiGatewayReady()) {
+  if (!isGeminiReady()) {
     return NextResponse.json(
       {
         error:
-          "O veredito sobe pelo AI Gateway do Vercel. No deploy isso é automático; localmente rode vercel env pull.",
+          "Defina GEMINI_API_KEY nas variáveis de ambiente do Vercel (Production, Preview e Development).",
       },
       { status: 503 },
     );
@@ -18,17 +17,35 @@ export async function GET() {
   const hoje = new Date().toISOString().slice(0, 10);
 
   try {
-    const { output } = await generateText({
+    const result = await getGeminiClient().models.generateContent({
       model: GEMINI_MODEL,
-      output: Output.object({ schema: schemaVeredito }),
-      prompt: `Analise o dia ${hoje}. Ainda não há histórico persistido. Devolva um veredito conservador pedindo mais dados de treino e nutrição, com atenção especial a sódio em dias de rodagem.`,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `Analise o dia ${hoje}. Ainda não há histórico persistido. Devolva um veredito conservador pedindo mais dados de treino e nutrição, com atenção especial a sódio em dias de rodagem.`,
+            },
+          ],
+        },
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schemaVeredito,
+      },
     });
+
+    const veredito = JSON.parse(result.text ?? "{}") as {
+      status: "no_caminho" | "atencao" | "fora_da_meta";
+      resumo: string;
+      alertas: { nutriente: string; mensagem: string; severidade: "baixa" | "media" | "alta" }[];
+    };
 
     return NextResponse.json({
       data: hoje,
       tipo: "diaria",
       modeloUsado: GEMINI_MODEL,
-      ...output,
+      ...veredito,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao gerar o veredito.";

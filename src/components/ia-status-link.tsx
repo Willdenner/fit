@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
-import { isAiGatewayReady } from "@/lib/gemini";
+import { isGeminiReady } from "@/lib/gemini";
 
 export function IaStatusLink() {
-  const ativa = isAiGatewayReady();
+  const ativa = isGeminiReady();
 
   return (
     <Link
@@ -13,7 +13,7 @@ export function IaStatusLink() {
       }`}
     >
       <Settings size={14} />
-      {ativa ? "IA ativa" : "IA no Vercel"}
+      {ativa ? "IA ativa" : "Ativar IA"}
     </Link>
   );
 }
