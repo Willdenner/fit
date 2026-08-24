@@ -1,47 +1,37 @@
 import { NextResponse } from "next/server";
-import { GEMINI_MODEL, getGeminiClient, schemaVeredito } from "@/lib/gemini";
+import { generateText, Output } from "ai";
+import { GEMINI_MODEL, isAiGatewayReady, schemaVeredito } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!isAiGatewayReady()) {
     return NextResponse.json(
-      { error: "Configure GEMINI_API_KEY para gerar o veredito periódico." },
+      {
+        error:
+          "O veredito sobe pelo AI Gateway do Vercel. No deploy isso é automático; localmente rode vercel env pull.",
+      },
       { status: 503 },
     );
   }
 
-  const ai = getGeminiClient();
   const hoje = new Date().toISOString().slice(0, 10);
 
-  const result = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Analise o dia ${hoje}. Ainda não há histórico persistido. Devolva um veredito conservador pedindo mais dados de treino e nutrição, com atenção especial a sódio em dias de rodagem.`,
-          },
-        ],
-      },
-    ],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: schemaVeredito,
-    },
-  });
+  try {
+    const { output } = await generateText({
+      model: GEMINI_MODEL,
+      output: Output.object({ schema: schemaVeredito }),
+      prompt: `Analise o dia ${hoje}. Ainda não há histórico persistido. Devolva um veredito conservador pedindo mais dados de treino e nutrição, com atenção especial a sódio em dias de rodagem.`,
+    });
 
-  const veredito = JSON.parse(result.text ?? "{}") as {
-    status: "no_caminho" | "atencao" | "fora_da_meta";
-    resumo: string;
-    alertas: { nutriente: string; mensagem: string; severidade: "baixa" | "media" | "alta" }[];
-  };
-
-  return NextResponse.json({
-    data: hoje,
-    tipo: "diaria",
-    modeloUsado: GEMINI_MODEL,
-    ...veredito,
-  });
+    return NextResponse.json({
+      data: hoje,
+      tipo: "diaria",
+      modeloUsado: GEMINI_MODEL,
+      ...output,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao gerar o veredito.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

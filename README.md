@@ -12,7 +12,7 @@ A especificação completa está em [`docs/especificacao.md`](docs/especificacao
 | Backend | API Routes do Next.js |
 | Banco | a provisionar no Vercel (projeto novo) |
 | Deploy | Vercel |
-| IA | Gemini `gemini-3.6-flash` — só no servidor |
+| IA | Gemini `google/gemini-3.6-flash` via Vercel AI Gateway |
 
 ## Como rodar
 
@@ -22,7 +22,15 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Preencha `GEMINI_API_KEY` em `.env.local`. Persistência fica para o banco que você criar no projeto Vercel.
+No Vercel (time Pro) o AI Gateway autentica com OIDC — qualquer usuário do app usa a mesma análise, sem cadastrar chave.
+
+Localmente:
+
+```bash
+npx vercel link
+npx vercel env pull .env.local
+npm run dev
+```
 
 ## Rotas
 
@@ -31,4 +39,4 @@ Preencha `GEMINI_API_KEY` em `.env.local`. Persistência fica para o banco que v
 - `/nutricao` — registro manual e foto (Gemini)
 - `/historico` — contexto da meia-maratona e veredito futuro
 
-Toda chamada ao Gemini sai de API route. A chave nunca vai para o client.
+Toda chamada ao Gemini sai de API route, pelo AI Gateway. Nada de chave no client.

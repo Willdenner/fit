@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
-import { GEMINI_MODEL, getGeminiClient, schemaFotoRefeicao } from "@/lib/gemini";
+import { generateText, Output } from "ai";
+import { GEMINI_MODEL, isAiGatewayReady, schemaFotoRefeicao } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!isAiGatewayReady()) {
     return NextResponse.json(
-      { error: "Configure GEMINI_API_KEY para analisar fotos no servidor." },
+      {
+        error:
+          "A análise de IA sobe pelo AI Gateway do Vercel. No deploy isso é automático; localmente rode vercel env pull.",
+      },
       { status: 503 },
     );
   }
@@ -18,33 +22,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Envie uma foto da refeição." }, { status: 400 });
   }
 
-  const bytes = Buffer.from(await foto.arrayBuffer());
-  const ai = getGeminiClient();
+  const bytes = new Uint8Array(await foto.arrayBuffer());
 
-  const result = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            inlineData: {
-              mimeType: foto.type || "image/jpeg",
-              data: bytes.toString("base64"),
+  try {
+    const { output } = await generateText({
+      model: GEMINI_MODEL,
+      output: Output.object({ schema: schemaFotoRefeicao }),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              image: bytes,
+              mediaType: foto.type || "image/jpeg",
             },
-          },
-          {
-            text: "Estime os itens, porções e valores nutricionais desta refeição. Destaque sódio quando visível.",
-          },
-        ],
-      },
-    ],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: schemaFotoRefeicao,
-    },
-  });
+            {
+              type: "text",
+              text: "Estime os itens, porções e valores nutricionais desta refeição. Destaque sódio quando visível.",
+            },
+          ],
+        },
+      ],
+    });
 
-  const estimativa = JSON.parse(result.text ?? "{}");
-  return NextResponse.json(estimativa);
+    return NextResponse.json(output);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao analisar a foto.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }
