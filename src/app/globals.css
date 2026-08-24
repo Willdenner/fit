@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0c1117;
+  --foreground: #f4f7fa;
+  --surface: #151c24;
+  --surface-2: #1c2530;
+  --muted: #8b9aab;
+  --border: #273140;
+  --treino: #2dd4bf;
+  --treino-dim: #115e59;
+  --nutricao: #e07a5f;
+  --nutricao-dim: #7c2d12;
+  --sodio: #fbbf24;
+  --sodio-dim: #78350f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-treino: var(--treino);
+  --color-treino-dim: var(--treino-dim);
+  --color-nutricao: var(--nutricao);
+  --color-nutricao-dim: var(--nutricao-dim);
+  --color-sodio: var(--sodio);
+  --color-sodio-dim: var(--sodio-dim);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  padding: 0.75rem 0.9rem;
+  font-size: 1rem;
+  outline: none;
+}

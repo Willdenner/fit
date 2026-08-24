@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/analises/veredito",
+      "schedule": "0 21 * * *"
+    }
+  ]
+}
