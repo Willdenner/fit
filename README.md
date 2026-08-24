@@ -10,7 +10,7 @@ A especificação completa está em [`docs/especificacao.md`](docs/especificacao
 |---|---|
 | Frontend | Next.js App Router, PWA |
 | Backend | API Routes do Next.js |
-| Banco | Postgres (Neon) + Drizzle |
+| Banco | a provisionar no Vercel (projeto novo) |
 | Deploy | Vercel |
 | IA | Gemini `gemini-3.6-flash` — só no servidor |
 
@@ -22,11 +22,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Preencha `DATABASE_URL` (Neon) e `GEMINI_API_KEY` em `.env.local`. Sem o banco, o app abre e os formulários avisam; nada é gravado.
-
-```bash
-npm run db:push
-```
+Preencha `GEMINI_API_KEY` em `.env.local`. Persistência fica para o banco que você criar no projeto Vercel.
 
 ## Rotas
 

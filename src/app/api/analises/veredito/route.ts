@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/db";
-import { analisesIa } from "@/db/schema";
 import { GEMINI_MODEL, getGeminiClient, schemaVeredito } from "@/lib/gemini";
 
 export const runtime = "nodejs";
@@ -9,13 +7,6 @@ export async function GET() {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: "Configure GEMINI_API_KEY para gerar o veredito periódico." },
-      { status: 503 },
-    );
-  }
-
-  if (!process.env.DATABASE_URL) {
-    return NextResponse.json(
-      { error: "Configure DATABASE_URL para persistir analises_ia." },
       { status: 503 },
     );
   }
@@ -47,18 +38,10 @@ export async function GET() {
     alertas: { nutriente: string; mensagem: string; severidade: "baixa" | "media" | "alta" }[];
   };
 
-  const db = getDb();
-  const [analise] = await db
-    .insert(analisesIa)
-    .values({
-      data: hoje,
-      tipo: "diaria",
-      status: veredito.status,
-      resumo: veredito.resumo,
-      alertas: veredito.alertas ?? [],
-      modeloUsado: GEMINI_MODEL,
-    })
-    .returning();
-
-  return NextResponse.json(analise);
+  return NextResponse.json({
+    data: hoje,
+    tipo: "diaria",
+    modeloUsado: GEMINI_MODEL,
+    ...veredito,
+  });
 }

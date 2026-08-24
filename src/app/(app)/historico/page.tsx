@@ -21,7 +21,7 @@ export default function HistoricoPage() {
       </section>
       <section className="rounded-2xl border border-dashed border-border bg-surface/60 p-6 text-center">
         <p className="text-sm text-muted">
-          Veredito diário/semanal da IA entra na V3, lendo a tabela `analises_ia`.
+          Veredito diário/semanal da IA entra na V3, depois que o banco novo estiver no Vercel.
         </p>
       </section>
     </main>

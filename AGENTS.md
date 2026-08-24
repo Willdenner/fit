@@ -12,7 +12,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 App pessoal de treino (corrida) e nutrição. Spec canônica: `docs/especificacao.md`.
 
-- Stack: Next.js App Router + Neon/Drizzle + Gemini no servidor
+- Stack: Next.js App Router + Gemini no servidor. Banco entra no deploy Vercel.
 - Navegação: Hoje / Treino / Nutrição / Histórico
 - Sódio tem cor própria (âmbar). Treino é teal. Nutrição é coral.
 - Nunca chamar Gemini do client. Chave só em `GEMINI_API_KEY`.

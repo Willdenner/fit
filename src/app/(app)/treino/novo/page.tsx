@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { tiposTreino, type TipoTreino } from "@/db/schema";
+import { tiposTreino, type TipoTreino } from "@/lib/types";
 
 const labels: Record<TipoTreino, string> = {
   facil: "Fácil",
